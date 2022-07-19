@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 from views import ( get_all_entries, get_single_entry, get_all_moods, get_single_mood,
-                   get_entries_by_mood, delete_mood, delete_entry)
+                   get_entries_by_mood, delete_mood, delete_entry, get_entries_by_search)
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -94,6 +94,9 @@ class HandleRequests(BaseHTTPRequestHandler):
             # see if the query dictionary has an email key
             if query.get('mood') and resource == 'journal_entries':
                 response = get_entries_by_mood(query['mood'][0])
+                
+            if query.get('q') and resource == 'journal_entries':
+                response = get_entries_by_search(query['q'])
 
         self.wfile.write(response.encode())
         
