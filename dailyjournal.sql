@@ -31,5 +31,13 @@ INSERT INTO `Journal_entries` VALUES ( NULL, "Python is not too bad", '2022-07-2
 INSERT INTO `Journal_entries` VALUES ( NULL, "Python is impossible!!", '2022-07-22', 3);
 INSERT INTO `Journal_entries` VALUES ( NULL, "Python is fun, again! ", '2022-07-18', 1);
 
-CREATE TABLE `Mood_tags` (
-    `
+
+SELECT
+    j.id,
+    j.concept,
+    j.date,
+    j.mood_id,
+    m.label
+FROM  Journal_entries j
+JOIN Moods m
+    on m.id = j.mood_id
