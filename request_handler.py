@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 from views import ( get_all_entries, get_single_entry, get_all_moods, get_single_mood,
-                   get_entries_by_mood)
+                   get_entries_by_mood, delete_mood, delete_entry)
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -97,7 +97,23 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         self.wfile.write(response.encode())
         
-#self.wfile.write(response.encode())
+
+    def do_DELETE(self):
+    # Set a 204 response code
+        self._set_headers(204)
+
+    # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+    # Delete a single animal from the list
+        if resource == "journal_entries":
+            delete_entry(id)
+    # Delete a single animal from the list
+        if resource == "moods":
+            delete_mood(id)
+
+    # Encode the new animal and send in response
+        self.wfile.write("".encode())
 
 
 # This function is not inside the class. It is the starting

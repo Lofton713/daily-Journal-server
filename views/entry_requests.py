@@ -65,8 +65,8 @@ def get_single_entry(id):
             j.id,
             j.concept,
             j.date,
-            j.mood_id,
-            m.label
+            j.mood_id
+            
         FROM Journal_entries J
         WHERE j.id = ?
         """, ( id, ))
@@ -79,7 +79,7 @@ def get_single_entry(id):
                             data['mood_id'])
 
         return json.dumps(entry.__dict__)
-    
+
 def get_entries_by_mood(mood_id):
 
     with sqlite3.connect("./dailyjournal.sqlite3") as conn:
@@ -106,3 +106,12 @@ def get_entries_by_mood(mood_id):
             entries.append(entry.__dict__)
 
     return json.dumps(entries)
+
+def delete_entry(id):
+    with sqlite3.connect("./dailyjournal.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        DELETE FROM Journal_entries
+        WHERE id = ?
+        """, (id, ))
