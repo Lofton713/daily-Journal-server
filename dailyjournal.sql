@@ -41,3 +41,15 @@ SELECT
 FROM  Journal_entries j
 JOIN Moods m
     on m.id = j.mood_id
+
+SELECT
+    j.id,
+    j.concept,
+    j.date,
+    j.mood_id,
+    m.label
+            
+FROM Journal_entries J
+JOIN Moods m
+    on m.id = j.mood_id
+WHERE j.id = 2

@@ -65,9 +65,12 @@ def get_single_entry(id):
             j.id,
             j.concept,
             j.date,
-            j.mood_id
+            j.mood_id,
+            m.label
             
         FROM Journal_entries J
+        JOIN Moods m
+            on m.id = j.mood_id
         WHERE j.id = ?
         """, ( id, ))
 
@@ -77,6 +80,11 @@ def get_single_entry(id):
         # Create an animal instance from the current row
         entry = Entry(data['id'], data['concept'], data['date'],
                             data['mood_id'])
+
+        mood = Mood(data['id'], data['label'])
+
+        entry.mood = mood.__dict__
+
 
         return json.dumps(entry.__dict__)
 
