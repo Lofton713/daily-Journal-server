@@ -1,7 +1,9 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
 from urllib.parse import urlparse, parse_qs
 from views import ( get_all_entries, get_single_entry, get_all_moods, get_single_mood,
                    get_entries_by_mood, delete_mood, delete_entry, get_entries_by_search)
+from views.entry_requests import create_entry
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -53,9 +55,9 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods',
-                         'GET, POST, PUT, DELETE')
+                        'GET, POST, PUT, DELETE')
         self.send_header('Access-Control-Allow-Headers',
-                         'X-Requested-With, Content-Type, Accept')
+                        'X-Requested-With, Content-Type, Accept')
         self.end_headers()
 
     # Here's a method on the class that overrides the parent's method.
@@ -94,12 +96,12 @@ class HandleRequests(BaseHTTPRequestHandler):
             # see if the query dictionary has an email key
             if query.get('mood') and resource == 'journal_entries':
                 response = get_entries_by_mood(query['mood'][0])
-                
+
             if query.get('q') and resource == 'journal_entries':
                 response = get_entries_by_search(query['q'])
 
         self.wfile.write(response.encode())
-        
+
 
     def do_DELETE(self):
     # Set a 204 response code
@@ -117,6 +119,34 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     # Encode the new animal and send in response
         self.wfile.write("".encode())
+        
+# Here's a method on the class that overrides the parent's method.
+    # It handles any POST request.
+    def do_POST(self):
+        """Handles POST requests to the server
+        """
+        # Set response code to 'Created'
+        self._set_headers(201)
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+
+        # Convert JSON string to a Python dictionary
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Initialize new animal
+        new_data = None
+        
+        # Add a new animal to the list. Don't worry about
+        # the orange squiggle, you'll define the create_animal
+        # function next.
+        if resource == "journal_entries":
+            new_data = create_entry(post_body)
+
+        # Encode the new animal and send in response
+        self.wfile.write(f"{new_data}".encode())
 
 
 # This function is not inside the class. It is the starting

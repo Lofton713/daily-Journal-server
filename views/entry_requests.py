@@ -18,6 +18,7 @@ def get_all_entries():
         SELECT
             j.id,
             j.concept,
+            j.entry,
             j.date,
             j.mood_id,
             m.label
@@ -40,8 +41,8 @@ def get_all_entries():
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
             # Animal class above.
-            entry = Entry(row['id'], row['concept'], row['date'],
-                          row['mood_id'])
+            entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
+                        row['mood_id'])
 
             # Create a Location instance from the current row
             mood = Mood(row['id'], row['label'])
@@ -64,6 +65,7 @@ def get_single_entry(id):
         SELECT
             j.id,
             j.concept,
+            j.entry,
             j.date,
             j.mood_id,
             m.label
@@ -78,7 +80,7 @@ def get_single_entry(id):
         data = db_cursor.fetchone()
 
         # Create an animal instance from the current row
-        entry = Entry(data['id'], data['concept'], data['date'],
+        entry = Entry(data['id'], data['concept'], data['entry'], data['date'],
                             data['mood_id'])
 
         mood = Mood(data['id'], data['label'])
@@ -109,7 +111,7 @@ def get_entries_by_mood(mood_id):
         dataset = db_cursor.fetchall()
 
         for row in dataset:
-            entry = Entry(row['id'], row['concept'], row['date'],
+            entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
                                 row['mood_id'])
             entries.append(entry.__dict__)
 
@@ -145,8 +147,33 @@ def get_entries_by_search(search_terms):
         dataset = db_cursor.fetchall()
 
         for row in dataset:
-            entry = Entry(row['id'], row['concept'], row['date'],
+            entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
                                 row['mood_id'])
             entries.append(entry.__dict__)
 
     return json.dumps(entries)
+
+def create_entry(new_entry):
+    with sqlite3.connect("./dailyjournal.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        INSERT INTO Journal_entries
+            ( concept, entry, date, mood_id )
+        VALUES
+            ( ?, ?, ?, ?);
+        """, (new_entry['concept'], new_entry['entry'],
+            new_entry['date'], new_entry['mood_id'], ))
+
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
+
+        # Add the `id` property to the animal dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_entry['id'] = id
+
+
+    return json.dumps(new_entry)
