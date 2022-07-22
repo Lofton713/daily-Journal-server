@@ -21,6 +21,7 @@ def get_all_entries():
             j.entry,
             j.date,
             j.mood_id,
+            j.tags,
             m.label
             
         FROM  Journal_entries j
@@ -42,7 +43,7 @@ def get_all_entries():
             # exact order of the parameters defined in the
             # Animal class above.
             entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
-                        row['mood_id'])
+                        row['mood_id'], row['tags'])
 
             # Create a Location instance from the current row
             mood = Mood(row['id'], row['label'])
@@ -68,6 +69,7 @@ def get_single_entry(id):
             j.entry,
             j.date,
             j.mood_id,
+            j.tags,
             m.label
             
         FROM Journal_entries J
@@ -81,7 +83,7 @@ def get_single_entry(id):
 
         # Create an animal instance from the current row
         entry = Entry(data['id'], data['concept'], data['entry'], data['date'],
-                            data['mood_id'])
+                            data['mood_id'], data['tags'])
 
         mood = Mood(data['id'], data['label'])
 
@@ -103,6 +105,7 @@ def get_entries_by_mood(mood_id):
             j.concept,
             j.date,
             j.mood_id
+            j.tags
         from Journals_entries j
         WHERE j.mood_id = ?
         """, ( mood_id, ))
@@ -112,7 +115,7 @@ def get_entries_by_mood(mood_id):
 
         for row in dataset:
             entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
-                                row['mood_id'])
+                                row['mood_id'], row['tags'])
             entries.append(entry.__dict__)
 
     return json.dumps(entries)
@@ -138,7 +141,8 @@ def get_entries_by_search(search_terms):
             j.id,
             j.concept,
             j.date,
-            j.mood_id
+            j.mood_id,
+            j.tags
         from Journal_entries j
         WHERE j.concept LIKE ?
         """, ( f'%{search_terms[0]}%' , ))
@@ -148,7 +152,8 @@ def get_entries_by_search(search_terms):
 
         for row in dataset:
             entry = Entry(row['id'], row['concept'], row['entry'], row['date'],
-                                row['mood_id'])
+                                row['mood_id'], row['tags'])
+            
             entries.append(entry.__dict__)
 
     return json.dumps(entries)
@@ -159,11 +164,11 @@ def create_entry(new_entry):
 
         db_cursor.execute("""
         INSERT INTO Journal_entries
-            ( concept, entry, date, mood_id )
+            ( concept, entry, date, mood_id, tags )
         VALUES
             ( ?, ?, ?, ?);
         """, (new_entry['concept'], new_entry['entry'],
-            new_entry['date'], new_entry['mood_id'], ))
+            new_entry['date'], new_entry['mood_id'], new_entry['tags'] ))
 
         # The `lastrowid` property on the cursor will return
         # the primary key of the last thing that got added to
@@ -177,3 +182,30 @@ def create_entry(new_entry):
 
 
     return json.dumps(new_entry)
+
+def update_entry(id, new_entry):
+    with sqlite3.connect("./dailyjournal.sqlite3") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Journal_entries
+            SET
+                concept = ?,
+                entry = ?,
+                mood_id = ?
+                tags = ?
+                
+        WHERE id = ?
+        """, (new_entry['concept'], new_entry['entry'],
+            new_entry['mood_id'], new_entry['tags'], id ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True

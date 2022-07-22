@@ -2,8 +2,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from urllib.parse import urlparse, parse_qs
 from views import ( get_all_entries, get_single_entry, get_all_moods, get_single_mood,
-                   get_entries_by_mood, delete_mood, delete_entry, get_entries_by_search)
-from views.entry_requests import create_entry
+                   get_entries_by_mood, delete_mood, delete_entry, get_entries_by_search, update_entry, create_entry, get_all_tags)
+
 
 # Here's a class. It inherits from another class.
 # For now, think of a class as a container for functions that
@@ -89,6 +89,13 @@ class HandleRequests(BaseHTTPRequestHandler):
 
                 else:
                     response = f"{get_all_moods()}"
+            
+            if resource == "tags":
+                if id is not None:
+                    response = f"{get_single_mood(id)}"
+
+                else:
+                    response = f"{get_all_tags()}"
 
         else:  # There is a ? in the path, run the query param functions
             (resource, query) = parsed
@@ -138,7 +145,7 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         # Initialize new animal
         new_data = None
-        
+
         # Add a new animal to the list. Don't worry about
         # the orange squiggle, you'll define the create_animal
         # function next.
@@ -147,6 +154,27 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         # Encode the new animal and send in response
         self.wfile.write(f"{new_data}".encode())
+
+    def do_PUT(self):
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        success = False
+
+        if resource == "journal_entries":
+            update_entry(id, post_body)
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
+        # Encode the new animal and send in response
+        self.wfile.write("".encode())
 
 
 # This function is not inside the class. It is the starting
